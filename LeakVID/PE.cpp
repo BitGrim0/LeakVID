@@ -40,14 +40,18 @@ void* HookIAT(void* BaseAddress, const char* Import, void* FunctionAddress)
 
     while (importDescriptor->Name != NULL)
     {
-        if (auto moduleName = baseAddress + (LPCSTR)importDescriptor->Name; GetModuleBase(moduleName))
+        auto moduleName = baseAddress + (LPCSTR)importDescriptor->Name;
+
+        if (GetModuleBase(moduleName))
         {
             auto originalFirstThunk = (PIMAGE_THUNK_DATA)(baseAddress + importDescriptor->OriginalFirstThunk);
             auto firstThunk = (PIMAGE_THUNK_DATA)(baseAddress + importDescriptor->FirstThunk);
 
             while (originalFirstThunk->u1.AddressOfData != NULL)
             {
-                if (auto functionName = (PIMAGE_IMPORT_BY_NAME)(baseAddress + originalFirstThunk->u1.AddressOfData); strcmp(functionName->Name, Import) == 0)
+                auto functionName = (PIMAGE_IMPORT_BY_NAME)(baseAddress + originalFirstThunk->u1.AddressOfData);
+
+                if (strcmp(functionName->Name, Import) == 0)
                 {
                     auto originalFunctionAddress = reinterpret_cast<PVOID>(firstThunk->u1.Function);
 
