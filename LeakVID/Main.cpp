@@ -56,7 +56,7 @@ NTSTATUS HookedIoCreateDevice(
 	OriginalDeviceControl = DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL];
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = &HookedDeviceControl;
 
-	Log("[LeakVID] DeviceControl hooked: 0x%p => 0x%p", OriginalDeviceControl, DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]);
+	Log("[LeakVID] DeviceControl hooked: 0x%p => 0x%p\n", OriginalDeviceControl, DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]);
 
 	return IoCreateDevice(
 		DriverObject,
