@@ -88,7 +88,11 @@ void OnImageLoad(PUNICODE_STRING ImagePath, HANDLE ProcessId, PIMAGE_INFO ImageI
 	if (isVID)
 	{
 		auto originalFunctionAddress = HookIAT(ImageInfo->ImageBase, "IoCreateDevice", &HookedIoCreateDevice);
-		Log("[LeakVID] IoCreateDevice hooked: 0x%p => 0x%p\n", originalFunctionAddress, &HookedIoCreateDevice);
+
+		if (originalFunctionAddress)
+			Log("[LeakVID] IoCreateDevice hooked: 0x%p => 0x%p\n", originalFunctionAddress, &HookedIoCreateDevice);
+		else
+			Log("[LeakVID] IoCreateDevice hook failed\n", originalFunctionAddress, &HookedIoCreateDevice);
 	}
 }
 

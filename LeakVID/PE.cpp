@@ -1,5 +1,6 @@
 #include "PE.h"
 #include "Utils.h"
+#include "Log.h"
 
 bool IsValidPE(void* Address)
 {
@@ -19,8 +20,11 @@ PIMAGE_FILE_HEADER GetFileHeader(void* Address)
 
 void* HookIAT(void* BaseAddress, const char* Import, void* FunctionAddress)
 {
-    if (!IsValidPE(BaseAddress) || !Import || !FunctionAddress)
-        return nullptr;
+    if (!IsValidPE(BaseAddress) || !Import || !FunctionAddress) 
+    {
+        Log("[LeakVID] HookIAT: Not valid PE\n");
+        return NULL;
+    }
 
     auto baseAddress = reinterpret_cast<DWORD_PTR>(BaseAddress);
     auto dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(baseAddress);
@@ -28,18 +32,22 @@ void* HookIAT(void* BaseAddress, const char* Import, void* FunctionAddress)
     auto importDirectory = ntHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
     auto importDescriptor = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(baseAddress + importDirectory.VirtualAddress);
 
-    if (!importDescriptor) return NULL;
+    if (!importDescriptor) 
+    {
+        Log("[LeakVID] HookIAT: ImportDescriptor not found\n");
+        return NULL;
+    }
 
     while (importDescriptor->Name != NULL)
     {
-	    if (auto moduleName = baseAddress + (LPCSTR)importDescriptor->Name; GetModuleBase(moduleName))
+        if (auto moduleName = baseAddress + (LPCSTR)importDescriptor->Name; GetModuleBase(moduleName))
         {
             auto originalFirstThunk = (PIMAGE_THUNK_DATA)(baseAddress + importDescriptor->OriginalFirstThunk);
             auto firstThunk = (PIMAGE_THUNK_DATA)(baseAddress + importDescriptor->FirstThunk);
 
             while (originalFirstThunk->u1.AddressOfData != NULL)
             {
-	            if (auto functionName = (PIMAGE_IMPORT_BY_NAME)(baseAddress + originalFirstThunk->u1.AddressOfData); strcmp(functionName->Name, Import) == 0)
+                if (auto functionName = (PIMAGE_IMPORT_BY_NAME)(baseAddress + originalFirstThunk->u1.AddressOfData); strcmp(functionName->Name, Import) == 0)
                 {
                     auto originalFunctionAddress = reinterpret_cast<PVOID>(firstThunk->u1.Function);
 
@@ -56,5 +64,6 @@ void* HookIAT(void* BaseAddress, const char* Import, void* FunctionAddress)
         ++importDescriptor;
     }
 
+    Log("[LeakVID] HookIAT: Function not found\n");
     return NULL;
 }

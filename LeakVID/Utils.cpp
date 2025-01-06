@@ -19,7 +19,7 @@ void* GetModuleBase(const char* szModule)
 	if (!bytes)
 		return nullptr;
 
-	auto modules = (PRTL_PROCESS_MODULES)ExAllocatePool2(NonPagedPool, bytes, 0);
+	auto modules = (PRTL_PROCESS_MODULES)ExAllocatePool(NonPagedPool, bytes);
 
 	if (!modules)
 		return nullptr;
